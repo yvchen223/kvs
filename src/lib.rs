@@ -1,3 +1,6 @@
+#![deny(missing_docs)]
+//! A simple key-value store
+
 use std::collections::HashMap;
 
 /// `KvStore` stores key-value pairs in memory.
@@ -15,11 +18,13 @@ use std::collections::HashMap;
 /// assert_eq!(val, Some("value".to_owned()));
 ///
 /// ```
+#[derive(Default)]
 pub struct KvStore {
     store: HashMap<String, String>,
 }
 
 impl KvStore {
+    /// Constructs a new instance of `KvStore`
     pub fn new() -> Self {
         KvStore {
             store: HashMap::new(),
@@ -37,11 +42,7 @@ impl KvStore {
     ///
     /// Returns `None` if the key does not exist.
     pub fn get(&self, key: String) -> Option<String> {
-        if let Some(v) = self.store.get(&key) {
-            Some(v.to_owned())
-        } else {
-            None
-        }
+        self.store.get(&key).map(|v| v.to_owned())
     }
 
     /// Removes a given key.
@@ -51,4 +52,3 @@ impl KvStore {
         self.store.remove(&key);
     }
 }
-

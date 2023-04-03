@@ -1,6 +1,6 @@
-use std::process::exit;
 use clap::{arg, Command};
 use kvs::KvStore;
+use std::process::exit;
 
 fn main() {
     let mut kv = KvStore::new();
@@ -13,7 +13,7 @@ fn main() {
             kv.set(key.to_owned(), val.to_owned());
             eprintln!("unimplemented");
             exit(1);
-        },
+        }
         Some(("get", sub_matches)) => {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
             println!("Get {}", key);
@@ -25,7 +25,7 @@ fn main() {
 
             eprintln!("unimplemented");
             exit(1);
-        },
+        }
         Some(("rm", sub_matches)) => {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
             println!("RM {}", key);
@@ -52,26 +52,19 @@ fn cli() -> Command {
         .subcommand(
             Command::new("set")
                 .about("set key and value to store")
-                .args([
-                    arg!([KEY] "key"),
-                    arg!([VALUE] "value"),
-                ])
-                .arg_required_else_help(true)
+                .args([arg!([KEY] "key"), arg!([VALUE] "value")])
+                .arg_required_else_help(true),
         )
         .subcommand(
             Command::new("get")
                 .about("get value from store")
-                .arg(
-                    arg!([KEY] "key")
-                )
-                .arg_required_else_help(true)
+                .arg(arg!([KEY] "key"))
+                .arg_required_else_help(true),
         )
         .subcommand(
             Command::new("rm")
                 .about("remove a pair of key-value")
-                .arg(
-                    arg!([KEY] "key")
-                )
-                .arg_required_else_help(true)
+                .arg(arg!([KEY] "key"))
+                .arg_required_else_help(true),
         )
 }
