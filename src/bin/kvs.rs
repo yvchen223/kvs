@@ -1,12 +1,12 @@
-use std::env;
 use clap::{arg, Command};
-use kvs::{err, KvStore};
-use std::process::exit;
 use err::Result;
 use kvs::err::KvError;
+use kvs::{err, KvStore};
+use std::env;
+use std::process::exit;
 
 fn main() -> Result<()> {
-    let mut kv =  match KvStore::open(env::current_dir()?) {
+    let mut kv = match KvStore::open(env::current_dir()?) {
         Ok(kv) => kv,
         Err(e) => return Err(e),
     };
@@ -16,7 +16,7 @@ fn main() -> Result<()> {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
             let val = sub_matches.get_one::<String>("VALUE").expect("require");
             if let Err(e) = kv.set(key.to_owned(), val.to_owned()) {
-              eprintln!("err: {:?}", e);
+                eprintln!("err: {:?}", e);
             };
             exit(0);
         }
@@ -29,7 +29,7 @@ fn main() -> Result<()> {
                     } else {
                         println!("Key not found");
                     }
-                },
+                }
                 Err(e) => eprintln!("{:?}", e),
             };
             exit(0);
@@ -78,4 +78,3 @@ fn cli() -> Command {
                 .arg_required_else_help(true),
         )
 }
-

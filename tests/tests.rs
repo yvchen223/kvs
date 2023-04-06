@@ -1,8 +1,8 @@
-use std::env;
 use assert_cmd::prelude::*;
 use kvs::{KvStore, Result};
 use predicates::ord::eq;
 use predicates::str::{contains, is_empty, PredicateStrExt};
+use std::env;
 use std::process::Command;
 use tempfile::TempDir;
 use walkdir::WalkDir;

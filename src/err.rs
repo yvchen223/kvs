@@ -3,7 +3,6 @@
 use std::io;
 use thiserror::Error;
 
-
 /// KvError
 #[derive(Error, Debug)]
 pub enum KvError {
@@ -23,17 +22,14 @@ pub enum KvError {
     #[error("write file")]
     WriteFileError(#[from] io::Error),
 
-
     /// not found
     #[error("Key not found")]
     RecordNotFound,
 
     /// Read file error
     #[error("read file error")]
-    ReadFileError(io::Error)
+    ReadFileError(io::Error),
 }
 
 /// Alias for a Result with the error type KvError.
 pub type Result<T> = std::result::Result<T, KvError>;
-
-
