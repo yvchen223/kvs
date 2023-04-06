@@ -27,6 +27,10 @@ pub enum KvError {
     /// not found
     #[error("Key not found")]
     RecordNotFound,
+
+    /// Read file error
+    #[error("read file error")]
+    ReadFileError(io::Error)
 }
 
 /// Alias for a Result with the error type KvError.
