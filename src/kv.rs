@@ -123,7 +123,7 @@ impl KvStore {
             Some(command_pos) => {
                 let reader = match self.readers.get_mut(&command_pos.file_id) {
                     Some(r) => r,
-                    None => return Err(KvError::ReadFileError("not such file".to_string())),
+                    None => return Err(KvError::FindFileError(command_pos.file_id.to_string())),
                 };
                 reader.seek(SeekFrom::Start(command_pos.pos))?;
                 let mut buf = vec![0; command_pos.len];
@@ -164,7 +164,7 @@ impl KvStore {
         for command_pos in self.index.values_mut() {
             let reader = match self.readers.get_mut(&command_pos.file_id) {
                 Some(r) => r,
-                None => return Err(KvError::ReadFileError("no such reader".to_string())),
+                None => return Err(KvError::FindFileError(command_pos.file_id.to_string())),
             };
             reader.seek(SeekFrom::Start(command_pos.pos))?;
             let mut buf = reader.take(command_pos.len as u64);
@@ -212,7 +212,7 @@ fn new_log_file(
         .open(log_file.as_path())
     {
         Ok(f) => f,
-        Err(e) => return Err(KvError::OpenFileError(e)),
+        Err(e) => return Err(KvError::IoError(e)),
     };
 
     let reader = BufReader::new(f.try_clone()?);

@@ -7,28 +7,24 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum KvError {
     /// Open file error
-    #[error("can't open file")]
-    OpenFileError(io::Error),
+    #[error("io error: {0:?}")]
+    IoError(#[from] io::Error),
 
     /// json serialize error
-    #[error("serialize json error")]
+    #[error("serialize json error: {0:?}")]
     JSONSerializeError(#[from] serde_json::Error),
 
     /// unknown
     #[error("unknown error")]
     Unknown,
 
-    /// write file
-    #[error("write file")]
-    WriteFileError(#[from] io::Error),
-
     /// not found
     #[error("Key not found")]
     RecordNotFound,
 
-    /// Read file error
-    #[error("read file error")]
-    ReadFileError(String),
+    /// Find file error
+    #[error("find file error {0}")]
+    FindFileError(String),
 }
 
 /// Alias for a Result with the error type KvError.
