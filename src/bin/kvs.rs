@@ -1,37 +1,47 @@
 use clap::{arg, Command};
-use kvs::KvStore;
+use err::Result;
+use kvs::err::KvError;
+use kvs::{err, KvStore};
+use std::env;
 use std::process::exit;
 
-fn main() {
-    let mut kv = KvStore::new();
+fn main() -> Result<()> {
+    let mut kv = match KvStore::open(env::current_dir()?) {
+        Ok(kv) => kv,
+        Err(e) => return Err(e),
+    };
     let matches = cli().get_matches();
     match matches.subcommand() {
         Some(("set", sub_matches)) => {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
             let val = sub_matches.get_one::<String>("VALUE").expect("require");
-            println!("Set {} {}", key, val);
-            kv.set(key.to_owned(), val.to_owned());
-            eprintln!("unimplemented");
-            exit(1);
+            if let Err(e) = kv.set(key.to_owned(), val.to_owned()) {
+                eprintln!("err: {:?}", e);
+            };
+            exit(0);
         }
         Some(("get", sub_matches)) => {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
-            println!("Get {}", key);
-            if let Some(val) = kv.get(key.to_owned()) {
-                println!("Val {}", val);
-            } else {
-                println!("None");
-            }
-
-            eprintln!("unimplemented");
-            exit(1);
+            match kv.get(key.to_owned()) {
+                Ok(opt) => {
+                    if let Some(val) = opt {
+                        println!("{}", val);
+                    } else {
+                        println!("Key not found");
+                    }
+                }
+                Err(e) => eprintln!("{:?}", e),
+            };
+            exit(0);
         }
         Some(("rm", sub_matches)) => {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
-            println!("RM {}", key);
-            kv.remove(key.to_owned());
+            match kv.remove(key.to_owned()) {
+                Ok(_) => exit(0),
+                Err(KvError::RecordNotFound) => println!("Key not found"),
+                Err(e) => eprintln!("{:?}", e),
+            }
 
-            eprintln!("unimplemented");
             exit(1);
         }
         _ => {
