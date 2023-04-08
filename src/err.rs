@@ -28,7 +28,7 @@ pub enum KvError {
 
     /// Read file error
     #[error("read file error")]
-    ReadFileError(io::Error),
+    ReadFileError(String),
 }
 
 /// Alias for a Result with the error type KvError.
