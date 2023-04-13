@@ -1,6 +1,7 @@
 use crate::err::Error;
 use crate::KvsEngine;
 use crate::Result;
+use sled::Tree;
 use std::path::PathBuf;
 
 /// SledKvsEngine contains sled db
@@ -10,7 +11,8 @@ pub struct SledKvsEngine {
 
 impl SledKvsEngine {
     /// New SledKvsEngine
-    pub fn new(path: PathBuf) -> Result<Self> {
+    pub fn open(path: impl Into<PathBuf>) -> Result<Self> {
+        let path = path.into();
         let sled = match sled::open(path) {
             Ok(db) => db,
             Err(e) => return Err(Error::ServerError(e.to_string())),
@@ -21,8 +23,9 @@ impl SledKvsEngine {
 
 impl KvsEngine for SledKvsEngine {
     fn set(&mut self, key: String, value: String) -> Result<()> {
-        self.sled.insert(key.as_str(), value.as_str())?;
-        self.sled.flush()?;
+        let tree: &Tree = &self.sled;
+        tree.insert(key, value.as_bytes())?;
+        tree.flush()?;
         Ok(())
     }
 

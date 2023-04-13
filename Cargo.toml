@@ -23,3 +23,7 @@ predicates = "3.0.2"
 rand = "0.8.5"
 tempfile = "3.5.0"
 walkdir = "2.3.3"
+
+[[bench]]
+name = "benches"
+harness = false

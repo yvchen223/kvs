@@ -26,7 +26,7 @@ fn main() {
 
     match engine_name.as_str() {
         "sled" => {
-            let mut server = KvsServer::new(SledKvsEngine::new(current_dir().unwrap()).unwrap());
+            let mut server = KvsServer::new(SledKvsEngine::open(current_dir().unwrap()).unwrap());
             server.run(addr).unwrap();
         }
         _ => {
