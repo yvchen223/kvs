@@ -1,12 +1,12 @@
-use std::io::{BufReader, BufWriter, Write};
-use std::net::{TcpStream, ToSocketAddrs};
-use serde_json::de::IoRead;
-use serde_json::Deserializer;
-use serde::Deserialize;
-use err::Result;
 use crate::common::{Request, Response, ResponseBody};
 use crate::err;
 use crate::err::Error;
+use err::Result;
+use serde::Deserialize;
+use serde_json::de::IoRead;
+use serde_json::Deserializer;
+use std::io::{BufReader, BufWriter, Write};
+use std::net::{TcpStream, ToSocketAddrs};
 
 /// KvsClient
 /// Connect to remote server and send commands to server
@@ -24,9 +24,8 @@ impl KvsClient {
         let writer = BufWriter::new(stream);
         let reader = BufReader::new(reader_stream);
         let reader = serde_json::Deserializer::from_reader(reader);
-        Ok(KvsClient { writer, reader})
+        Ok(KvsClient { writer, reader })
     }
-
 
     /// Get value of key from remote server
     pub fn get(&mut self, key: String) -> Result<Option<String>> {
@@ -37,7 +36,7 @@ impl KvsClient {
         let rsp = Response::deserialize(&mut self.reader)?;
         match rsp.body {
             ResponseBody::Ok(val) => Ok(val),
-            ResponseBody::Err(e) => Err(Error::ClientGetError(e))
+            ResponseBody::Err(e) => Err(Error::ClientGetError(e)),
         }
     }
 
@@ -50,7 +49,7 @@ impl KvsClient {
         let rsp = Response::deserialize(&mut self.reader)?;
         match rsp.body {
             ResponseBody::Ok(_) => Ok(()),
-            ResponseBody::Err(e) => Err(Error::ClientSetError(e))
+            ResponseBody::Err(e) => Err(Error::ClientSetError(e)),
         }
     }
 
@@ -63,8 +62,7 @@ impl KvsClient {
         let rsp = Response::deserialize(&mut self.reader)?;
         match rsp.body {
             ResponseBody::Ok(_) => Ok(()),
-            ResponseBody::Err(e) => Err(Error::ClientRemoveError(e))
+            ResponseBody::Err(e) => Err(Error::ClientRemoveError(e)),
         }
     }
 }
-

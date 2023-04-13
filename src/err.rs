@@ -37,6 +37,14 @@ pub enum Error {
     /// Client remove value error
     #[error("remove value error: {0}")]
     ClientRemoveError(String),
+
+    /// Server error
+    #[error("server error: {0}")]
+    ServerError(String),
+
+    /// Sled error
+    #[error("sled error {0:?}")]
+    SledError(#[from] sled::Error),
 }
 
 /// Alias for a Result with the error type Error.

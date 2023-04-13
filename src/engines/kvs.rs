@@ -1,5 +1,6 @@
 use crate::err::Error;
 use crate::err::Result;
+use crate::KvsEngine;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::OsStr;
@@ -7,7 +8,6 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::{fs, io};
-use crate::KvsEngine;
 
 /// `KvStore` stores key-value pairs in memory.
 ///
@@ -157,8 +157,6 @@ impl KvStore {
             path,
         })
     }
-
-
 
     fn compact(&mut self) -> Result<()> {
         let compact_file_id = self.file_id + 1;

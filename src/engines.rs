@@ -1,8 +1,10 @@
 //! KvsEngine
 
-pub use kvs::KvStore;
+pub use self::kvs::KvStore;
+pub use self::sled::SledKvsEngine;
 
 mod kvs;
+mod sled;
 
 use crate::err::Result;
 

@@ -1,12 +1,11 @@
 use clap::{Arg, Command};
-use kvs::{KvStore, KvsServer};
-use std::{env, fs};
+use kvs::{KvStore, KvsServer, SledKvsEngine};
+use log::{error, info};
 use std::env::current_dir;
 use std::process::exit;
-use log::{error, info};
+use std::{env, fs};
 
 fn main() {
-
     env_logger::init();
 
     let matches = cli().get_matches();
@@ -25,13 +24,16 @@ fn main() {
         exit(1);
     }
 
-
-
-    let kvs = KvStore::open(env::current_dir().unwrap()).unwrap();
-    let mut server = KvsServer::new(kvs);
-
-    server.run(addr).unwrap();
-
+    match engine_name.as_str() {
+        "sled" => {
+            let mut server = KvsServer::new(SledKvsEngine::new(current_dir().unwrap()).unwrap());
+            server.run(addr).unwrap();
+        }
+        _ => {
+            let mut server = KvsServer::new(KvStore::open(env::current_dir().unwrap()).unwrap());
+            server.run(addr).unwrap();
+        }
+    }
 }
 
 fn cli() -> Command {
@@ -47,7 +49,7 @@ fn cli() -> Command {
                 .value_name("ADDR")
                 .default_value("127.0.0.1:4000")
                 .ignore_case(true)
-                .help("IP address")
+                .help("IP address"),
         )
         .arg(
             Arg::new("engine")
@@ -56,6 +58,6 @@ fn cli() -> Command {
                 .value_name("ENGINE-NAME")
                 .default_value("kvs")
                 .help("engine name")
-                .ignore_case(true)
+                .ignore_case(true),
         )
 }

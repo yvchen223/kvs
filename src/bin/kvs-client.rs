@@ -16,7 +16,6 @@ fn main() -> Result<()> {
             let key = sub_matches.get_one::<String>("KEY").expect("require");
             let val = sub_matches.get_one::<String>("VALUE").expect("require");
             client.set(key.to_owned(), val.to_owned())?;
-
         }
         Some(("get", sub_matches)) => {
             let addr = sub_matches.get_one::<String>("addr").expect("addr");
@@ -61,8 +60,8 @@ fn cli() -> Command {
                         .long("addr")
                         .value_name("ADDR")
                         .default_value("127.0.0.1:4000")
-                        .help("IP address")
-                )
+                        .help("IP address"),
+                ),
         )
         .subcommand(
             Command::new("get")
@@ -75,8 +74,8 @@ fn cli() -> Command {
                         .long("addr")
                         .value_name("ADDR")
                         .default_value("127.0.0.1:4000")
-                        .help("IP address")
-                )
+                        .help("IP address"),
+                ),
         )
         .subcommand(
             Command::new("rm")
@@ -89,8 +88,7 @@ fn cli() -> Command {
                         .long("addr")
                         .value_name("ADDR")
                         .default_value("127.0.0.1:4000")
-                        .help("IP address")
-                )
+                        .help("IP address"),
+                ),
         )
-
 }
