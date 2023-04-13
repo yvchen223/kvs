@@ -1,4 +1,4 @@
-use crate::err::KvError;
+use crate::err::Error;
 use crate::err::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::{fs, io};
+use crate::KvsEngine;
 
 /// `KvStore` stores key-value pairs in memory.
 ///
@@ -16,7 +17,7 @@ use std::{fs, io};
 ///
 /// ```rust
 /// use std::env;
-/// use kvs::KvStore;
+/// use kvs::{KvsEngine, KvStore};
 ///
 /// let mut kv = KvStore::open(env::current_dir().expect("current dir error")).expect("open error");
 /// kv.set("key".to_owned(), "value".to_owned()).expect("set error");
@@ -50,6 +51,76 @@ struct CommandPos {
     file_id: u64,
     pos: u64,
     len: usize,
+}
+
+impl KvsEngine for KvStore {
+    /// Sets a pair of key-value.
+    ///
+    /// The value will be overwritten if the key has existed.
+    fn set(&mut self, key: String, value: String) -> Result<()> {
+        let command = Command {
+            command_type: CommandType::Set,
+            key: key.clone(),
+            value,
+        };
+        let command_serialize = serde_json::to_vec(&command)?;
+
+        let start = self.writer.pos;
+        let len = self.writer.write(&command_serialize)?;
+        let command_pos = CommandPos {
+            file_id: self.file_id,
+            pos: start,
+            len,
+        };
+
+        if let Some(command_pos) = self.index.insert(key, command_pos) {
+            self.uncompacted += command_pos.len as u64;
+        }
+        if self.uncompacted > 1024 {
+            self.compact()?;
+        }
+        Ok(())
+    }
+
+    /// Gets the string value of the given string key.
+    ///
+    /// Returns `None` if the key does not exist.
+    fn get(&mut self, key: String) -> Result<Option<String>> {
+        return match self.index.get(&key) {
+            Some(command_pos) => {
+                let reader = match self.readers.get_mut(&command_pos.file_id) {
+                    Some(r) => r,
+                    None => return Err(Error::FindFileError(command_pos.file_id.to_string())),
+                };
+                reader.seek(SeekFrom::Start(command_pos.pos))?;
+                let mut buf = vec![0; command_pos.len];
+                reader.read_exact(&mut buf)?;
+                let command: Command = serde_json::from_slice(&buf)?;
+                Ok(Some(command.value))
+            }
+            None => Ok(None),
+        };
+    }
+
+    /// Removes a given key.
+    ///
+    /// Does nothing if the key does not exist.
+    fn remove(&mut self, key: String) -> Result<()> {
+        match self.index.remove(&key) {
+            Some(command_pos) => {
+                self.uncompacted += command_pos.len as u64;
+                let command = Command {
+                    command_type: CommandType::Remove,
+                    key: key.clone(),
+                    value: String::new(),
+                };
+                let command_serialize = serde_json::to_vec(&command)?;
+                self.writer.write_all(&command_serialize)?;
+            }
+            None => return Err(Error::RecordNotFound),
+        }
+        Ok(())
+    }
 }
 
 impl KvStore {
@@ -87,73 +158,7 @@ impl KvStore {
         })
     }
 
-    /// Sets a pair of key-value.
-    ///
-    /// The value will be overwritten if the key has existed.
-    pub fn set(&mut self, key: String, value: String) -> Result<()> {
-        let command = Command {
-            command_type: CommandType::Set,
-            key: key.clone(),
-            value,
-        };
-        let command_serialize = serde_json::to_vec(&command)?;
 
-        let start = self.writer.pos;
-        let len = self.writer.write(&command_serialize)?;
-        let command_pos = CommandPos {
-            file_id: self.file_id,
-            pos: start,
-            len,
-        };
-
-        if let Some(command_pos) = self.index.insert(key, command_pos) {
-            self.uncompacted += command_pos.len as u64;
-        }
-        if self.uncompacted > 1024 {
-            self.compact()?;
-        }
-        Ok(())
-    }
-
-    /// Gets the string value of the given string key.
-    ///
-    /// Returns `None` if the key does not exist.
-    pub fn get(&mut self, key: String) -> Result<Option<String>> {
-        return match self.index.get(&key) {
-            Some(command_pos) => {
-                let reader = match self.readers.get_mut(&command_pos.file_id) {
-                    Some(r) => r,
-                    None => return Err(KvError::FindFileError(command_pos.file_id.to_string())),
-                };
-                reader.seek(SeekFrom::Start(command_pos.pos))?;
-                let mut buf = vec![0; command_pos.len];
-                reader.read_exact(&mut buf)?;
-                let command: Command = serde_json::from_slice(&buf)?;
-                Ok(Some(command.value))
-            }
-            None => Ok(None),
-        };
-    }
-
-    /// Removes a given key.
-    ///
-    /// Does nothing if the key does not exist.
-    pub fn remove(&mut self, key: String) -> Result<()> {
-        match self.index.remove(&key) {
-            Some(command_pos) => {
-                self.uncompacted += command_pos.len as u64;
-                let command = Command {
-                    command_type: CommandType::Remove,
-                    key: key.clone(),
-                    value: String::new(),
-                };
-                let command_serialize = serde_json::to_vec(&command)?;
-                self.writer.write_all(&command_serialize)?;
-            }
-            None => return Err(KvError::RecordNotFound),
-        }
-        Ok(())
-    }
 
     fn compact(&mut self) -> Result<()> {
         let compact_file_id = self.file_id + 1;
@@ -164,7 +169,7 @@ impl KvStore {
         for command_pos in self.index.values_mut() {
             let reader = match self.readers.get_mut(&command_pos.file_id) {
                 Some(r) => r,
-                None => return Err(KvError::FindFileError(command_pos.file_id.to_string())),
+                None => return Err(Error::FindFileError(command_pos.file_id.to_string())),
             };
             reader.seek(SeekFrom::Start(command_pos.pos))?;
             let mut buf = reader.take(command_pos.len as u64);
@@ -212,7 +217,7 @@ fn new_log_file(
         .open(log_file.as_path())
     {
         Ok(f) => f,
-        Err(e) => return Err(KvError::IoError(e)),
+        Err(e) => return Err(Error::IoError(e)),
     };
 
     let reader = BufReader::new(f.try_clone()?);
