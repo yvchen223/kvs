@@ -3,9 +3,9 @@
 use std::io;
 use thiserror::Error;
 
-/// KvError
+/// Error
 #[derive(Error, Debug)]
-pub enum KvError {
+pub enum Error {
     /// Open file error
     #[error("io error: {0:?}")]
     IoError(#[from] io::Error),
@@ -25,7 +25,27 @@ pub enum KvError {
     /// Find file error
     #[error("find file error {0}")]
     FindFileError(String),
+
+    /// Client get value error
+    #[error("get value error: {0}")]
+    ClientGetError(String),
+
+    /// Client set key-value error
+    #[error("set key-value error: {0}")]
+    ClientSetError(String),
+
+    /// Client remove value error
+    #[error("remove value error: {0}")]
+    ClientRemoveError(String),
+
+    /// Server error
+    #[error("server error: {0}")]
+    ServerError(String),
+
+    /// Sled error
+    #[error("sled error {0:?}")]
+    SledError(#[from] sled::Error),
 }
 
-/// Alias for a Result with the error type KvError.
-pub type Result<T> = std::result::Result<T, KvError>;
+/// Alias for a Result with the error type Error.
+pub type Result<T> = std::result::Result<T, Error>;
