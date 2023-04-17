@@ -19,7 +19,7 @@ sled = "0.34.7"
 [dev-dependencies]
 assert_cmd = "2.0.10"
 criterion = "0.4.0"
-crossbeam = "0.8.2"
+crossbeam-utils = "0.8.15"
 predicates = "3.0.2"
 rand = "0.8.5"
 tempfile = "3.5.0"
