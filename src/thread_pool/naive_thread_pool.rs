@@ -1,15 +1,14 @@
-use std::sync::{Arc, mpsc, Mutex};
+use crate::err::Result;
+use crate::thread_pool::ThreadPool;
+use log::info;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
-use log::{debug, info};
-use crate::err::{Result, Error};
-use crate::thread_pool::ThreadPool;
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 /// NaiveThreadPool
 pub struct NaiveThreadPool {
-    size: usize,
     workers: Vec<Worker>,
     sender: Option<mpsc::Sender<Job>>,
 }
@@ -28,14 +27,14 @@ impl ThreadPool for NaiveThreadPool {
         }
 
         Ok(NaiveThreadPool {
-            size,
             workers,
             sender: Some(tx),
         })
     }
 
     fn spawn<F>(&self, job: F)
-        where F: FnOnce() + Send + 'static
+    where
+        F: FnOnce() + Send + 'static,
     {
         let job = Box::new(job);
         self.sender.as_ref().unwrap().send(job).unwrap();
@@ -44,7 +43,7 @@ impl ThreadPool for NaiveThreadPool {
 impl Drop for NaiveThreadPool {
     fn drop(&mut self) {
         drop(self.sender.take());
-        for mut worker in &mut self.workers {
+        for worker in &mut self.workers {
             info!("worker-{} shutting down", worker.id);
             if let Some(handle) = worker.thread.take() {
                 handle.join().unwrap();
@@ -65,18 +64,16 @@ impl Worker {
             match message {
                 Ok(job) => {
                     job();
-                },
+                }
                 Err(_) => {
                     info!("worker-{} disconnection; shutting down", id);
-                    break
+                    break;
                 }
             }
         });
-        Ok(
-            Worker {
-                id,
-                thread: Some(handle),
-            }
-        )
+        Ok(Worker {
+            id,
+            thread: Some(handle),
+        })
     }
 }
