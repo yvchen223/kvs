@@ -1,4 +1,5 @@
 use clap::{Arg, Command};
+use kvs::thread_pool::{NaiveThreadPool, ThreadPool};
 use kvs::{KvStore, KvsServer, SledKvsEngine};
 use log::{error, info};
 use std::env::current_dir;
@@ -24,13 +25,20 @@ fn main() {
         exit(1);
     }
 
+    let thread_pool = NaiveThreadPool::new(10).expect("init pool");
     match engine_name.as_str() {
         "sled" => {
-            let mut server = KvsServer::new(SledKvsEngine::open(current_dir().unwrap()).unwrap());
+            let mut server = KvsServer::new(
+                SledKvsEngine::open(current_dir().unwrap()).unwrap(),
+                thread_pool,
+            );
             server.run(addr).unwrap();
         }
         _ => {
-            let mut server = KvsServer::new(KvStore::open(env::current_dir().unwrap()).unwrap());
+            let mut server = KvsServer::new(
+                KvStore::open(env::current_dir().unwrap()).unwrap(),
+                thread_pool,
+            );
             server.run(addr).unwrap();
         }
     }
