@@ -6,7 +6,7 @@ use std::thread;
 pub struct NaiveThreadPool {}
 
 impl ThreadPool for NaiveThreadPool {
-    fn new(size: usize) -> Result<Self> {
+    fn new(_size: usize) -> Result<Self> {
         Ok(NaiveThreadPool {})
     }
 
