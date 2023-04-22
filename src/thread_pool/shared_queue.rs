@@ -1,8 +1,9 @@
 use crate::err::Result;
 use crate::thread_pool::ThreadPool;
-use log::info;
+use log::{error, info};
 use std::sync::{mpsc, Arc, Mutex};
-use std::thread;
+use std::{panic, thread};
+use std::panic::AssertUnwindSafe;
 use std::thread::JoinHandle;
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
@@ -63,7 +64,9 @@ impl Worker {
             let message = receiver.lock().unwrap().recv();
             match message {
                 Ok(job) => {
-                    job();
+                    if panic::catch_unwind(AssertUnwindSafe(job)).is_err() {
+                        error!("worker-{} panic", id);
+                    }
                 }
                 Err(_) => {
                     info!("worker-{} disconnection; shutting down", id);
