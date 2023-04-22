@@ -7,13 +7,13 @@ use std::thread::JoinHandle;
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
-/// NaiveThreadPool
-pub struct NaiveThreadPool {
+/// SharedQueueThreadPool
+pub struct SharedQueueThreadPool {
     workers: Vec<Worker>,
     sender: Option<mpsc::Sender<Job>>,
 }
 
-impl ThreadPool for NaiveThreadPool {
+impl ThreadPool for SharedQueueThreadPool {
     fn new(size: usize) -> Result<Self> {
         assert!(size > 0);
 
@@ -26,7 +26,7 @@ impl ThreadPool for NaiveThreadPool {
             workers.push(worker);
         }
 
-        Ok(NaiveThreadPool {
+        Ok(SharedQueueThreadPool {
             workers,
             sender: Some(tx),
         })
@@ -40,7 +40,7 @@ impl ThreadPool for NaiveThreadPool {
         self.sender.as_ref().unwrap().send(job).unwrap();
     }
 }
-impl Drop for NaiveThreadPool {
+impl Drop for SharedQueueThreadPool {
     fn drop(&mut self) {
         drop(self.sender.take());
         for worker in &mut self.workers {

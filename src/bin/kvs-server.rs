@@ -1,5 +1,5 @@
 use clap::{Arg, Command};
-use kvs::thread_pool::{NaiveThreadPool, ThreadPool};
+use kvs::thread_pool::{SharedQueueThreadPool, ThreadPool};
 use kvs::{KvStore, KvsServer, SledKvsEngine};
 use log::{error, info};
 use std::env::current_dir;
@@ -25,7 +25,7 @@ fn main() {
         exit(1);
     }
 
-    let thread_pool = NaiveThreadPool::new(10).expect("init pool");
+    let thread_pool = SharedQueueThreadPool::new(num_cpus::get()).expect("init pool");
     match engine_name.as_str() {
         "sled" => {
             let mut server = KvsServer::new(

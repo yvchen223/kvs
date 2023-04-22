@@ -1,8 +1,10 @@
 //! thread pool
 
-mod naive_thread_pool;
+mod naive;
+mod shared_queue;
 
-pub use naive_thread_pool::NaiveThreadPool;
+pub use naive::NaiveThreadPool;
+pub use shared_queue::SharedQueueThreadPool;
 
 use crate::err::Result;
 
