@@ -1,10 +1,10 @@
 use crate::err::Result;
 use crate::thread_pool::ThreadPool;
 use log::{error, info};
-use std::sync::{mpsc, Arc, Mutex};
-use std::{panic, thread};
 use std::panic::AssertUnwindSafe;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread::JoinHandle;
+use std::{panic, thread};
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
@@ -45,7 +45,6 @@ impl Drop for SharedQueueThreadPool {
     fn drop(&mut self) {
         drop(self.sender.take());
         for worker in &mut self.workers {
-            info!("worker-{} shutting down", worker.id);
             if let Some(handle) = worker.thread.take() {
                 handle.join().unwrap();
             }
@@ -69,7 +68,6 @@ impl Worker {
                     }
                 }
                 Err(_) => {
-                    info!("worker-{} disconnection; shutting down", id);
                     break;
                 }
             }

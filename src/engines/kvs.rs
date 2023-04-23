@@ -11,6 +11,7 @@ use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::{fs, io};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const MAX_COMPACT_SIZE: u64 = 1024;
 
@@ -123,7 +124,7 @@ impl KvStore {
         let path = Arc::new(path);
         let readers = KvStoreReader {
             readers: RefCell::new(readers),
-            cur_file_id,
+            cur_file_id: Arc::new(AtomicU64::new(cur_file_id)),
             path: Arc::clone(&path),
         };
 
@@ -229,7 +230,7 @@ fn load_data_from_file(
 
 struct KvStoreReader {
     readers: RefCell<HashMap<u64, BufReaderWithPos>>,
-    cur_file_id: u64,
+    cur_file_id: Arc<AtomicU64>,
     path: Arc<PathBuf>,
 }
 
@@ -268,7 +269,7 @@ impl KvStoreReader {
         let mut readers = self.readers.borrow_mut();
         while !readers.is_empty() {
             let file_id = *readers.keys().next().unwrap();
-            if file_id >= self.cur_file_id {
+            if file_id >= self.cur_file_id.load(Ordering::SeqCst) {
                 break;
             }
             readers.remove(&file_id);
@@ -280,7 +281,7 @@ impl Clone for KvStoreReader {
     fn clone(&self) -> Self {
         KvStoreReader {
             readers: RefCell::new(HashMap::new()),
-            cur_file_id: self.cur_file_id,
+            cur_file_id: Arc::clone(&self.cur_file_id),
             path: Arc::clone(&self.path),
         }
     }
