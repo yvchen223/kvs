@@ -15,15 +15,24 @@ log = "0.4.17"
 serde = { version = "1.0.158", features = ["derive"] }
 serde_json = "1.0.95"
 sled = "0.34.7"
+crossbeam-skiplist = "0.1.1"
+num_cpus = "1.15.0"
+rayon = "1.7.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"
 criterion = "0.4.0"
+crossbeam-utils = "0.8.15"
 predicates = "3.0.2"
 rand = "0.8.5"
 tempfile = "3.5.0"
 walkdir = "2.3.3"
+panic-control = "0.1.4"
 
 [[bench]]
-name = "benches"
+name = "engines"
+harness = false
+
+[[bench]]
+name = "thread_pool"
 harness = false

@@ -9,13 +9,13 @@ mod sled;
 use crate::err::Result;
 
 /// KvsEngine
-pub trait KvsEngine {
+pub trait KvsEngine: Clone + Send + 'static {
     /// set
-    fn set(&mut self, key: String, value: String) -> Result<()>;
+    fn set(&self, key: String, value: String) -> Result<()>;
 
     /// get
-    fn get(&mut self, key: String) -> Result<Option<String>>;
+    fn get(&self, key: String) -> Result<Option<String>>;
 
     /// remove
-    fn remove(&mut self, key: String) -> Result<()>;
+    fn remove(&self, key: String) -> Result<()>;
 }

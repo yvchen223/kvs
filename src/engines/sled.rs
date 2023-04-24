@@ -5,6 +5,7 @@ use sled::Tree;
 use std::path::PathBuf;
 
 /// SledKvsEngine contains sled db
+#[derive(Clone)]
 pub struct SledKvsEngine {
     sled: sled::Db,
 }
@@ -22,14 +23,14 @@ impl SledKvsEngine {
 }
 
 impl KvsEngine for SledKvsEngine {
-    fn set(&mut self, key: String, value: String) -> Result<()> {
+    fn set(&self, key: String, value: String) -> Result<()> {
         let tree: &Tree = &self.sled;
         tree.insert(key, value.as_bytes())?;
         tree.flush()?;
         Ok(())
     }
 
-    fn get(&mut self, key: String) -> Result<Option<String>> {
+    fn get(&self, key: String) -> Result<Option<String>> {
         match self.sled.get(key.as_str()) {
             Ok(val) => match val {
                 Some(v) => {
@@ -45,7 +46,7 @@ impl KvsEngine for SledKvsEngine {
         }
     }
 
-    fn remove(&mut self, key: String) -> Result<()> {
+    fn remove(&self, key: String) -> Result<()> {
         self.sled.remove(key)?.ok_or(Error::RecordNotFound)?;
         self.sled.flush()?;
         Ok(())

@@ -45,6 +45,10 @@ pub enum Error {
     /// Sled error
     #[error("sled error {0:?}")]
     SledError(#[from] sled::Error),
+
+    /// Normal error
+    #[error("{0:?}")]
+    StringError(String),
 }
 
 /// Alias for a Result with the error type Error.
